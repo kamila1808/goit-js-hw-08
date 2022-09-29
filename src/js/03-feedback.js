@@ -29,8 +29,6 @@
 //     console.log(formData);
 // }
 
-
-
 // function onTextAreaInput(event) {
 //     const message = event.target.value;
 //     localStorage.setItem(STORAGE_KEY, message);
@@ -48,44 +46,48 @@
 
 import throttle from 'lodash.throttle';
 
-const STORAGE_KEY = 'feedback-form-state';
-
 const refs = {
   form: document.querySelector('.feedback-form'),
-  textarea: document.querySelector('.feedback-form textarea'),
-  input: document.querySelector('input'),
+  email: document.querySelector('input[name="email"]'),
+  message: document.querySelector('textarea[name="message"]'),
 };
 
-const formData = {};
+const STORAGE_KEY = 'feedback-form-state';
 
-populateTextarea();
+populateTextArea();
 
-refs.form.addEventListener('input', throttle(onTextareaInput, 500));
+refs.form.addEventListener(
+  'input',
+  throttle(event => {
+    const formData = {
+      email: `${refs.form['email'].value}`,
+      message: `${refs.form['message'].value}`,
+    };
+
+    const formDataJSON = JSON.stringify(formData);
+
+    localStorage.setItem(STORAGE_KEY, formDataJSON);
+  }, 500)
+);
 
 refs.form.addEventListener('submit', event => {
   event.preventDefault();
+
+  const formData = {
+    email: `${refs.form['email'].value}`,
+    message: `${refs.form['message'].value}`,
+  };
+
+  console.log(formData);
   event.currentTarget.reset();
-  localStorage.getItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_KEY);
-  console.log(formData)
 });
 
-function onTextareaInput(event) {
-  formData[event.target.name] = event.target.value;
-  const stringifiedData = JSON.stringify(formData);
-  localStorage.setItem(STORAGE_KEY, stringifiedData);
-}
-
-function populateTextarea() {
-    const savedMessage = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  
-    if (savedMessage === null) {
-      return;
-    }
-    refs.textarea.value = savedMessage['message'] || '';
-    refs.input.value = savedMessage['email'] || '';
+function populateTextArea() {
+  const savedMessage = localStorage.getItem(STORAGE_KEY);
+  const parsedData = JSON.parse(savedMessage);
+  if (parsedData) {
+    refs.email.value = parsedData.email;
+    refs.message.value = parsedData.message;
   }
-
-
-
-
+}
